@@ -15,12 +15,12 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        {children}
-        <Script src="https://cdn.botpress.cloud/webchat/v3.4/inject.js" strategy="afterInteractive" />
+        <Script src="https://cdn.botpress.cloud/webchat/v3.5/inject.js" strategy="afterInteractive" />
         <Script
-          src="https://files.bpcontent.cloud/2025/12/08/16/20251208162029-UU682CTG.js"
+          src="https://files.bpcontent.cloud/2025/12/09/18/20251209185610-AMNCV6ON.js"
           strategy="afterInteractive"
         />
+        {children}
       </body>
     </html>
   )

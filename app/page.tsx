@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, FormEvent } from 'react'
+import { useState, useEffect, FormEvent } from 'react'
 
 declare global {
   interface Window {
@@ -16,19 +16,35 @@ export default function Home() {
   const [password, setPassword] = useState('')
   const [isLoggedIn, setIsLoggedIn] = useState(false)
 
-  const handleLogin = (e: FormEvent) => {
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (!window.botpress) {
+        return
+      }
+      window.botpress.on('webchat:initialized', () => {
+        console.log('Webchat initialized')
+      })
+      clearInterval(interval)
+    }, 100)
+  }, [])
+
+  const handleLogin = async (e: FormEvent) => {
     e.preventDefault()
 
     // Send user data to Botpress
     // https://botpress.com/docs/webchat/interact/send-user-data
-    if (window.botpress) {
-      window.botpress.updateUser({
-        data: {
-          username: username
-        }
-      })
-    }
+    console.log('window.botpress exists:', !!window.botpress)
+    console.log('Calling updateUser:', { username, password })
+    window.botpress?.updateUser({
+      data: {
+        username: username,
+        password: password
+      }
+    })
+    await new Promise((resolve) => setTimeout(resolve, 1000))
 
+    // const user = await window.botpress.getUser()
+    // console.log({ user })
     setIsLoggedIn(true)
   }
 
