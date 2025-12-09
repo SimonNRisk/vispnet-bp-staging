@@ -1,11 +1,12 @@
 'use client'
 
-import { useState, FormEvent } from 'react'
+import { useState, useEffect, FormEvent } from 'react'
 
 declare global {
   interface Window {
-    botpress?: {
+    botpress: {
       updateUser: (data: { data: Record<string, string> }) => void
+      on: (event: string, callback: () => void) => void
     }
   }
 }
@@ -14,18 +15,33 @@ export default function Home() {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const [webchatReady, setWebchatReady] = useState(false)
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (window.botpress) {
+        window.botpress.on('webchat:initialized', () => {
+          console.log('webchat:initialized')
+          setWebchatReady(true)
+        })
+        clearInterval(interval)
+      }
+    }, 100)
+    return () => clearInterval(interval)
+  }, [])
 
   const handleLogin = (e: FormEvent) => {
     e.preventDefault()
 
-    // Send user data to Botpress
-    console.log('Calling updateUser:', { username, password })
-    window.botpress?.updateUser({
-      data: {
-        username: username,
-        password: password
-      }
-    })
+    if (webchatReady) {
+      console.log('Calling updateUser:', { username, password })
+      window.botpress.updateUser({
+        data: {
+          username: username,
+          password: password
+        }
+      })
+    }
 
     setIsLoggedIn(true)
   }
@@ -52,6 +68,10 @@ export default function Home() {
     <div className="min-h-screen flex items-center justify-center p-6">
       <div className="w-full max-w-sm">
         <h1 className="text-xl font-medium text-center mb-8">Vispnet</h1>
+        <p className="text-gray-500 mb-6">
+          Please only click on the chat bubble once logged in - clicking it beforehand will error. On the actual Vispnet
+          users, we can ensure all users have credentials.
+        </p>
 
         <form onSubmit={handleLogin} className="space-y-4">
           <div>
