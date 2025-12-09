@@ -16,7 +16,7 @@ export default function RootLayout({
       <body>
         {children}
         <script src="https://cdn.botpress.cloud/webchat/v3.5/inject.js"></script>
-        <script src="https://files.bpcontent.cloud/2025/12/09/20/20251209202418-B960FX4J.js" defer></script>
+        <script src="https://files.bpcontent.cloud/2025/12/09/21/20251209210836-PU6RS9M9.js" defer></script>
       </body>
     </html>
   )
