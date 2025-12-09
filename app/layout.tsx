@@ -1,5 +1,4 @@
 import type { Metadata } from 'next'
-import Script from 'next/script'
 import './globals.css'
 
 export const metadata: Metadata = {
@@ -15,12 +14,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <Script src="https://cdn.botpress.cloud/webchat/v3.5/inject.js" strategy="afterInteractive" />
-        <Script
-          src="https://files.bpcontent.cloud/2025/12/09/18/20251209185610-AMNCV6ON.js"
-          strategy="afterInteractive"
-        />
         {children}
+        <script src="https://cdn.botpress.cloud/webchat/v3.5/inject.js"></script>
+        <script src="https://files.bpcontent.cloud/2025/12/09/20/20251209202418-B960FX4J.js" defer></script>
       </body>
     </html>
   )

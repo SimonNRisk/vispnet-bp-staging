@@ -1,11 +1,10 @@
 'use client'
 
-import { useState, useEffect, FormEvent } from 'react'
+import { useState, FormEvent } from 'react'
 
 declare global {
   interface Window {
     botpress?: {
-      on: (event: string, callback: () => void) => void
       updateUser: (data: { data: Record<string, string> }) => void
     }
   }
@@ -16,24 +15,10 @@ export default function Home() {
   const [password, setPassword] = useState('')
   const [isLoggedIn, setIsLoggedIn] = useState(false)
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      if (!window.botpress) {
-        return
-      }
-      window.botpress.on('webchat:initialized', () => {
-        console.log('Webchat initialized')
-      })
-      clearInterval(interval)
-    }, 100)
-  }, [])
-
-  const handleLogin = async (e: FormEvent) => {
+  const handleLogin = (e: FormEvent) => {
     e.preventDefault()
 
     // Send user data to Botpress
-    // https://botpress.com/docs/webchat/interact/send-user-data
-    console.log('window.botpress exists:', !!window.botpress)
     console.log('Calling updateUser:', { username, password })
     window.botpress?.updateUser({
       data: {
@@ -41,29 +26,24 @@ export default function Home() {
         password: password
       }
     })
-    await new Promise((resolve) => setTimeout(resolve, 1000))
 
-    // const user = await window.botpress.getUser()
-    // console.log({ user })
     setIsLoggedIn(true)
+  }
+
+  const handleSignOut = () => {
+    setIsLoggedIn(false)
+    setUsername('')
+    setPassword('')
   }
 
   if (isLoggedIn) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center p-6">
         <h1 className="text-xl font-medium mb-2">Welcome, {username}</h1>
-        <p className="text-gray-500 mb-6">Chat with our assistant below.</p>
-        <button
-          onClick={() => {
-            setIsLoggedIn(false)
-            setUsername('')
-            setPassword('')
-          }}
-          className="text-blue-500 text-sm"
-        >
+        <p className="text-gray-500 mb-6">Chat with our assistant using the bubble.</p>
+        <button onClick={handleSignOut} className="text-blue-500 text-sm">
           Sign out
         </button>
-        <div id="bp-embedded-webchat" className="mt-8 w-full max-w-md h-[500px]" />
       </div>
     )
   }
