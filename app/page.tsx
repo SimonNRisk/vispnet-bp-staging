@@ -52,6 +52,15 @@ export default function Home() {
     setPassword('')
   }
 
+  if (!webchatReady) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center p-6">
+        <div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+        <p className="text-gray-500 mt-4">Loading...</p>
+      </div>
+    )
+  }
+
   if (isLoggedIn) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center p-6">
