@@ -16,16 +16,14 @@ export default function Home() {
   const [password, setPassword] = useState('')
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [webchatReady, setWebchatReady] = useState(false)
+  const [scriptsLoaded, setScriptsLoaded] = useState(false)
 
   useEffect(() => {
-    if (isLoggedIn) {
-      // Show the webchat container if it was previously hidden
-      const webchatContainer = document.getElementById('bp-web-widget-container')
-      if (webchatContainer) {
-        webchatContainer.style.display = 'block'
-      }
+    // Only load webchat scripts after successful login
+    if (!isLoggedIn) return
 
-      // Load Botpress scripts when user logs in
+    if (!scriptsLoaded) {
+      // Load Botpress scripts only on first login
       const script1 = document.createElement('script')
       script1.src = 'https://cdn.botpress.cloud/webchat/v3.5/inject.js'
       document.body.appendChild(script1)
@@ -35,25 +33,21 @@ export default function Home() {
       script2.defer = true
       document.body.appendChild(script2)
 
-      // Poll for webchat initialization after scripts load
-      const interval = setInterval(() => {
-        if (window.botpress) {
-          window.botpress.on('webchat:initialized', () => {
-            console.log('webchat:initialized')
-            setWebchatReady(true)
-            // Ensure webchat is visible after initialization
-            const container = document.getElementById('bp-web-widget-container')
-            if (container) {
-              container.style.display = 'block'
-            }
-          })
-          clearInterval(interval)
-        }
-      }, 100)
-
-      return () => clearInterval(interval)
+      setScriptsLoaded(true)
     }
-  }, [isLoggedIn])
+
+    // Poll for webchat container after login
+    const interval = setInterval(() => {
+      const webchatContainer = document.getElementById('bp-web-widget-container')
+      if (webchatContainer) {
+        webchatContainer.style.display = 'block'
+        setWebchatReady(true)
+        clearInterval(interval)
+      }
+    }, 100)
+
+    return () => clearInterval(interval)
+  }, [isLoggedIn, scriptsLoaded])
 
   const handleLogin = (e: FormEvent) => {
     e.preventDefault()
@@ -83,15 +77,6 @@ export default function Home() {
     if (webchatContainer) {
       webchatContainer.style.display = 'none'
     }
-  }
-
-  if (isLoggedIn && !webchatReady) {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center p-6">
-        <div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
-        <p className="text-gray-500 mt-4">Loading webchat...</p>
-      </div>
-    )
   }
 
   if (isLoggedIn) {
