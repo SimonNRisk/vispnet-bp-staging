@@ -18,22 +18,39 @@ export default function Home() {
   const [webchatReady, setWebchatReady] = useState(false)
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      if (window.botpress) {
-        window.botpress.on('webchat:initialized', () => {
-          console.log('webchat:initialized')
-          setWebchatReady(true)
-        })
-        clearInterval(interval)
-      }
-    }, 100)
-    return () => clearInterval(interval)
-  }, [])
+    if (isLoggedIn) {
+      // Load Botpress scripts when user logs in
+      const script1 = document.createElement('script')
+      script1.src = 'https://cdn.botpress.cloud/webchat/v3.5/inject.js'
+      document.body.appendChild(script1)
+
+      const script2 = document.createElement('script')
+      script2.src = 'https://files.bpcontent.cloud/2026/01/07/15/20260107150430-TIG10B51.js'
+      script2.defer = true
+      document.body.appendChild(script2)
+
+      // Poll for webchat initialization after scripts load
+      const interval = setInterval(() => {
+        if (window.botpress) {
+          window.botpress.on('webchat:initialized', () => {
+            console.log('webchat:initialized')
+            setWebchatReady(true)
+          })
+          clearInterval(interval)
+        }
+      }, 100)
+
+      return () => clearInterval(interval)
+    }
+  }, [isLoggedIn])
 
   const handleLogin = (e: FormEvent) => {
     e.preventDefault()
+    setIsLoggedIn(true)
+  }
 
-    if (webchatReady) {
+  useEffect(() => {
+    if (webchatReady && isLoggedIn && username && password) {
       console.log('Calling updateUser:', { username, password })
       window.botpress.updateUser({
         data: {
@@ -42,9 +59,7 @@ export default function Home() {
         }
       })
     }
-
-    setIsLoggedIn(true)
-  }
+  }, [webchatReady, isLoggedIn, username, password])
 
   const handleSignOut = () => {
     setIsLoggedIn(false)
@@ -52,11 +67,11 @@ export default function Home() {
     setPassword('')
   }
 
-  if (!webchatReady) {
+  if (isLoggedIn && !webchatReady) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center p-6">
         <div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
-        <p className="text-gray-500 mt-4">Loading...</p>
+        <p className="text-gray-500 mt-4">Loading webchat...</p>
       </div>
     )
   }
@@ -77,11 +92,6 @@ export default function Home() {
     <div className="min-h-screen flex items-center justify-center p-6">
       <div className="w-full max-w-sm">
         <h1 className="text-xl font-medium text-center mb-8">Vispnet</h1>
-        <p className="text-gray-500 mb-6">
-          Please only click on the chat bubble once logged in - clicking it beforehand will error. On the actual Vispnet
-          users, we can ensure all users have credentials.
-        </p>
-
         <form onSubmit={handleLogin} className="space-y-4">
           <div>
             <label htmlFor="username" className="block text-sm mb-1">
