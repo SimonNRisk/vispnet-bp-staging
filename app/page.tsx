@@ -19,6 +19,12 @@ export default function Home() {
 
   useEffect(() => {
     if (isLoggedIn) {
+      // Show the webchat container if it was previously hidden
+      const webchatContainer = document.getElementById('bp-web-widget-container')
+      if (webchatContainer) {
+        webchatContainer.style.display = 'block'
+      }
+
       // Load Botpress scripts when user logs in
       const script1 = document.createElement('script')
       script1.src = 'https://cdn.botpress.cloud/webchat/v3.5/inject.js'
@@ -35,6 +41,11 @@ export default function Home() {
           window.botpress.on('webchat:initialized', () => {
             console.log('webchat:initialized')
             setWebchatReady(true)
+            // Ensure webchat is visible after initialization
+            const container = document.getElementById('bp-web-widget-container')
+            if (container) {
+              container.style.display = 'block'
+            }
           })
           clearInterval(interval)
         }
@@ -65,6 +76,13 @@ export default function Home() {
     setIsLoggedIn(false)
     setUsername('')
     setPassword('')
+    setWebchatReady(false)
+
+    // Hide the Botpress webchat
+    const webchatContainer = document.getElementById('bp-web-widget-container')
+    if (webchatContainer) {
+      webchatContainer.style.display = 'none'
+    }
   }
 
   if (isLoggedIn && !webchatReady) {
