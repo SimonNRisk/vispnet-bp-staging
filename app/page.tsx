@@ -16,24 +16,61 @@ export default function Home() {
   const [password, setPassword] = useState('')
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [webchatReady, setWebchatReady] = useState(false)
+  const [scriptsLoaded, setScriptsLoaded] = useState(false)
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      if (window.botpress) {
-        window.botpress.on('webchat:initialized', () => {
-          console.log('webchat:initialized')
-          setWebchatReady(true)
-        })
-        clearInterval(interval)
+    // Only load webchat scripts after successful login
+    if (!isLoggedIn) return
+
+    if (!scriptsLoaded) {
+      // Load Botpress scripts only on first login
+      const script1 = document.createElement('script')
+      script1.src = 'https://cdn.botpress.cloud/webchat/v3.5/inject.js'
+
+      script1.onload = () => {
+        // Load second script only after first one loads
+        const script2 = document.createElement('script')
+        script2.src = 'https://files.bpcontent.cloud/2026/01/07/15/20260107150430-TIG10B51.js'
+        document.body.appendChild(script2)
       }
-    }, 100)
-    return () => clearInterval(interval)
-  }, [])
+
+      document.body.appendChild(script1)
+      setScriptsLoaded(true)
+
+      // Wait for Botpress to load, then listen for initialization
+      const waitForBotpress = setInterval(() => {
+        if (window.botpress) {
+          window.botpress.on('webchat:initialized', () => {
+            console.log('webchat:initialized')
+            setWebchatReady(true)
+          })
+          clearInterval(waitForBotpress)
+        }
+      }, 100)
+
+      return () => clearInterval(waitForBotpress)
+    } else {
+      // If scripts already loaded (second login), just poll for container
+      const interval = setInterval(() => {
+        const webchatContainer = document.getElementById('bp-web-widget-container')
+        if (webchatContainer) {
+          webchatContainer.style.display = 'block'
+          setWebchatReady(true)
+          clearInterval(interval)
+        }
+      }, 100)
+
+      return () => clearInterval(interval)
+    }
+  }, [isLoggedIn])
 
   const handleLogin = (e: FormEvent) => {
     e.preventDefault()
+    setIsLoggedIn(true)
+  }
 
-    if (webchatReady) {
+  useEffect(() => {
+    if (webchatReady && isLoggedIn && username && password) {
       console.log('Calling updateUser:', { username, password })
       window.botpress.updateUser({
         data: {
@@ -42,23 +79,11 @@ export default function Home() {
         }
       })
     }
-
-    setIsLoggedIn(true)
-  }
+  }, [webchatReady, isLoggedIn, username, password])
 
   const handleSignOut = () => {
-    setIsLoggedIn(false)
-    setUsername('')
-    setPassword('')
-  }
-
-  if (!webchatReady) {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center p-6">
-        <div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
-        <p className="text-gray-500 mt-4">Loading...</p>
-      </div>
-    )
+    // Refresh the page to reset to initial login state
+    window.location.reload()
   }
 
   if (isLoggedIn) {
@@ -77,11 +102,6 @@ export default function Home() {
     <div className="min-h-screen flex items-center justify-center p-6">
       <div className="w-full max-w-sm">
         <h1 className="text-xl font-medium text-center mb-8">Vispnet</h1>
-        <p className="text-gray-500 mb-6">
-          Please only click on the chat bubble once logged in - clicking it beforehand will error. On the actual Vispnet
-          users, we can ensure all users have credentials.
-        </p>
-
         <form onSubmit={handleLogin} className="space-y-4">
           <div>
             <label htmlFor="username" className="block text-sm mb-1">
