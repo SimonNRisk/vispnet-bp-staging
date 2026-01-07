@@ -26,28 +26,43 @@ export default function Home() {
       // Load Botpress scripts only on first login
       const script1 = document.createElement('script')
       script1.src = 'https://cdn.botpress.cloud/webchat/v3.5/inject.js'
-      document.body.appendChild(script1)
 
-      const script2 = document.createElement('script')
-      script2.src = 'https://files.bpcontent.cloud/2026/01/07/15/20260107150430-TIG10B51.js'
-      script2.defer = true
-      document.body.appendChild(script2)
-
-      setScriptsLoaded(true)
-    }
-
-    // Poll for webchat container after login
-    const interval = setInterval(() => {
-      const webchatContainer = document.getElementById('bp-web-widget-container')
-      if (webchatContainer) {
-        webchatContainer.style.display = 'block'
-        setWebchatReady(true)
-        clearInterval(interval)
+      script1.onload = () => {
+        // Load second script only after first one loads
+        const script2 = document.createElement('script')
+        script2.src = 'https://files.bpcontent.cloud/2026/01/07/15/20260107150430-TIG10B51.js'
+        document.body.appendChild(script2)
       }
-    }, 100)
 
-    return () => clearInterval(interval)
-  }, [isLoggedIn, scriptsLoaded])
+      document.body.appendChild(script1)
+      setScriptsLoaded(true)
+
+      // Wait for Botpress to load, then listen for initialization
+      const waitForBotpress = setInterval(() => {
+        if (window.botpress) {
+          window.botpress.on('webchat:initialized', () => {
+            console.log('webchat:initialized')
+            setWebchatReady(true)
+          })
+          clearInterval(waitForBotpress)
+        }
+      }, 100)
+
+      return () => clearInterval(waitForBotpress)
+    } else {
+      // If scripts already loaded (second login), just poll for container
+      const interval = setInterval(() => {
+        const webchatContainer = document.getElementById('bp-web-widget-container')
+        if (webchatContainer) {
+          webchatContainer.style.display = 'block'
+          setWebchatReady(true)
+          clearInterval(interval)
+        }
+      }, 100)
+
+      return () => clearInterval(interval)
+    }
+  }, [isLoggedIn])
 
   const handleLogin = (e: FormEvent) => {
     e.preventDefault()
@@ -67,16 +82,8 @@ export default function Home() {
   }, [webchatReady, isLoggedIn, username, password])
 
   const handleSignOut = () => {
-    setIsLoggedIn(false)
-    setUsername('')
-    setPassword('')
-    setWebchatReady(false)
-
-    // Hide the Botpress webchat
-    const webchatContainer = document.getElementById('bp-web-widget-container')
-    if (webchatContainer) {
-      webchatContainer.style.display = 'none'
-    }
+    // Refresh the page to reset to initial login state
+    window.location.reload()
   }
 
   if (isLoggedIn) {
